@@ -1,0 +1,174 @@
+basePath: /
+definitions:
+  handler.APIErrorDoc:
+    properties:
+      code:
+        example: INVALID_URL
+        type: string
+      details:
+        example: scheme not allowed
+        type: string
+      message:
+        example: invalid URL
+        type: string
+    type: object
+  handler.DecodeRequestDoc:
+    properties:
+      short_code:
+        example: Xk92mP
+        type: string
+    type: object
+  handler.DecodeResponseDoc:
+    properties:
+      click_count:
+        example: 42
+        type: integer
+      created_at:
+        example: "2026-06-19T12:30:00Z"
+        type: string
+      original_url:
+        example: https://www.bbc.com/news/world-europe-12345678
+        type: string
+      short_code:
+        example: Xk92mP
+        type: string
+    type: object
+  handler.EncodeRequestDoc:
+    properties:
+      url:
+        example: https://www.bbc.com/news/world-europe-12345678
+        type: string
+    type: object
+  handler.EncodeResponseDoc:
+    properties:
+      created_at:
+        example: "2026-06-19T12:30:00Z"
+        type: string
+      original_url:
+        example: https://www.bbc.com/news/world-europe-12345678
+        type: string
+      short_code:
+        example: Xk92mP
+        type: string
+      short_url:
+        example: http://localhost:8080/Xk92mP
+        type: string
+    type: object
+  handler.ErrorResponseDoc:
+    properties:
+      error:
+        $ref: '#/definitions/handler.APIErrorDoc'
+    type: object
+  handler.HealthResponseDoc:
+    properties:
+      status:
+        example: ok
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Production-ready URL shortening service with encode and decode endpoints.
+  title: Go URL Shortener API
+  version: 1.0.0
+paths:
+  /api/v1/decode:
+    post:
+      consumes:
+      - application/json
+      description: Looks up the original URL and metadata for a short code.
+      parameters:
+      - description: Short code payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DecodeRequestDoc'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.DecodeResponseDoc'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+      summary: Decode short code
+      tags:
+      - URL
+  /api/v1/encode:
+    post:
+      consumes:
+      - application/json
+      description: Creates or returns an idempotent short URL for a valid public HTTP/HTTPS
+        URL.
+      parameters:
+      - description: URL to encode
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.EncodeRequestDoc'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.EncodeResponseDoc'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponseDoc'
+      summary: Encode URL
+      tags:
+      - URL
+  /health:
+    get:
+      description: Returns service health status and running version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.HealthResponseDoc'
+      summary: Health check
+      tags:
+      - System
+schemes:
+- http
+- https
+swagger: "2.0"

@@ -1,0 +1,37 @@
+# Binaries
+url-shortener
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+coverage.html
+coverage.out
+
+# Database files
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Go workspace
+go.work
+go.work.sum
+
+# OS
+.DS_Store
+Thumbs.db

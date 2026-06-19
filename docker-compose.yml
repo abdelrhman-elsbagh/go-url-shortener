@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: "0:0"
+    ports:
+      - "18080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - APP_ENV=production
+      - APP_PORT=8080
+      - APP_BASE_URL=http://localhost:18080
+      - DB_PATH=/app/data/urls.db
+      - REDIS_URL=redis:6379
+      - RATE_LIMIT_RPS=10
+      - RATE_LIMIT_BURST=20
+      - LOG_LEVEL=info
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:

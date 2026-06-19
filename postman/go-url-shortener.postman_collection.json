@@ -1,0 +1,143 @@
+{
+  "info": {
+    "_postman_id": "f3d8df8d-e1dd-4d9f-8fbc-f1e6a9d1c1a2",
+    "name": "Go URL Shortener API",
+    "description": "Collection for the Go URL Shortener service with realistic human sample data.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Checks service status and version."
+      },
+      "response": []
+    },
+    {
+      "name": "Encode URL (valid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"https://www.theguardian.com/travel/2026/jun/18/weekend-guide-to-istanbul\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/encode",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "encode"
+          ]
+        },
+        "description": "Creates a short URL from a normal public article link."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var data = pm.response.json();",
+              "if (data.short_code) {",
+              "    pm.collectionVariables.set(\"short_code\", data.short_code);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Decode URL (using short_code)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"short_code\": \"{{short_code}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/decode",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "decode"
+          ]
+        },
+        "description": "Looks up the original URL by short code."
+      },
+      "response": []
+    },
+    {
+      "name": "Encode URL (invalid scheme example)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"javascript:alert('hi')\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/encode",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "encode"
+          ]
+        },
+        "description": "Negative test: blocked scheme should return INVALID_URL."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:18080"
+    },
+    {
+      "key": "short_code",
+      "value": ""
+    }
+  ]
+}

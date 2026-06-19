@@ -1,0 +1,258 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Production-ready URL shortening service with encode and decode endpoints.",
+        "title": "Go URL Shortener API",
+        "contact": {},
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/api/v1/decode": {
+            "post": {
+                "description": "Looks up the original URL and metadata for a short code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "URL"
+                ],
+                "summary": "Decode short code",
+                "parameters": [
+                    {
+                        "description": "Short code payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.DecodeRequestDoc"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.DecodeResponseDoc"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/encode": {
+            "post": {
+                "description": "Creates or returns an idempotent short URL for a valid public HTTP/HTTPS URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "URL"
+                ],
+                "summary": "Encode URL",
+                "parameters": [
+                    {
+                        "description": "URL to encode",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.EncodeRequestDoc"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.EncodeResponseDoc"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponseDoc"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns service health status and running version.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HealthResponseDoc"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.APIErrorDoc": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "INVALID_URL"
+                },
+                "details": {
+                    "type": "string",
+                    "example": "scheme not allowed"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "invalid URL"
+                }
+            }
+        },
+        "handler.DecodeRequestDoc": {
+            "type": "object",
+            "properties": {
+                "short_code": {
+                    "type": "string",
+                    "example": "Xk92mP"
+                }
+            }
+        },
+        "handler.DecodeResponseDoc": {
+            "type": "object",
+            "properties": {
+                "click_count": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-06-19T12:30:00Z"
+                },
+                "original_url": {
+                    "type": "string",
+                    "example": "https://www.bbc.com/news/world-europe-12345678"
+                },
+                "short_code": {
+                    "type": "string",
+                    "example": "Xk92mP"
+                }
+            }
+        },
+        "handler.EncodeRequestDoc": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://www.bbc.com/news/world-europe-12345678"
+                }
+            }
+        },
+        "handler.EncodeResponseDoc": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-06-19T12:30:00Z"
+                },
+                "original_url": {
+                    "type": "string",
+                    "example": "https://www.bbc.com/news/world-europe-12345678"
+                },
+                "short_code": {
+                    "type": "string",
+                    "example": "Xk92mP"
+                },
+                "short_url": {
+                    "type": "string",
+                    "example": "http://localhost:8080/Xk92mP"
+                }
+            }
+        },
+        "handler.ErrorResponseDoc": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/handler.APIErrorDoc"
+                }
+            }
+        },
+        "handler.HealthResponseDoc": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        }
+    }
+}
