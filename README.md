@@ -60,7 +60,7 @@ This is a straightforward layered architecture — handler → service → stora
 ### Run with Docker Compose
 
 ```bash
-git clone https://github.com/abdelrahmantarek/go-url-shortener
+git clone https://github.com/abdelrhman-elsbagh/go-url-shortener.git
 cd go-url-shortener
 
 docker compose up --build
