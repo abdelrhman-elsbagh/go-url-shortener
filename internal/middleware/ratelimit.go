@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -44,6 +45,11 @@ func NewRateLimiter(rps float64, burst int) *RateLimiter {
 
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if shouldBypassRateLimit(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		if !rl.getLimiter(realIP(r)).Allow() {
 			retryAfter := int(1 / float64(rl.rps))
 			if retryAfter < 1 {
@@ -141,6 +147,11 @@ func NewRedisRateLimiter(client cache.Cache, rps int) *RedisRateLimiter {
 
 func (r *RedisRateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if shouldBypassRateLimit(req.URL.Path) {
+			next.ServeHTTP(w, req)
+			return
+		}
+
 		ip := realIP(req)
 		key := "rl:" + ip
 
@@ -167,4 +178,8 @@ func (r *RedisRateLimiter) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, req)
 	})
+}
+
+func shouldBypassRateLimit(path string) bool {
+	return strings.HasPrefix(path, "/swagger/")
 }

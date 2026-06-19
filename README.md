@@ -2,6 +2,8 @@
 
 A URL shortening service built in Go, with SQLite persistence, an optional Redis cache layer, rate limiting, and SSRF-aware validation.
 
+**Live demo:** `http://13.50.106.60:18080` ([health check](http://13.50.106.60:18080/health))
+
 ---
 
 ## Overview
@@ -85,6 +87,74 @@ go run ./cmd/server
 ```
 
 By default this listens on `:8080` and writes the SQLite file to `./data/urls.db`. Without `REDIS_URL` set, the service runs SQLite-only — no Redis required to develop or test locally.
+
+---
+
+## Deploying to a fresh server (e.g. AWS EC2, Ubuntu)
+
+This is the exact path used for the live demo, on a plain Ubuntu EC2 instance with nothing pre-installed.
+
+### 1. SSH into the server
+
+```bash
+ssh -i your-key.pem ubuntu@your-server-ip
+```
+
+### 2. Install Docker
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# optional: run docker without sudo
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+### 3. Clone and deploy
+
+```bash
+git clone https://github.com/abdelrahmantarek/go-url-shortener
+cd go-url-shortener
+docker compose up --build -d
+```
+
+### 4. Open the port in AWS
+
+The app listens on host port `18080` (see `docker-compose.yml`). AWS Security Groups block all inbound traffic except SSH by default, so this port has to be opened explicitly:
+
+1. EC2 Console → select the instance → **Security** tab → click the attached Security Group
+2. **Inbound rules** → **Edit inbound rules** → **Add rule**
+3. Type: `Custom TCP`, Port range: `18080`, Source: `0.0.0.0/0` (or a specific IP/CIDR to restrict access)
+4. Save
+
+### Verify
+
+From the server itself:
+```bash
+curl http://localhost:18080/health
+```
+
+From your own machine, using the instance's public IP:
+```bash
+curl http://13.50.106.60:18080/health
+```
+
+Both should return:
+```json
+{"status":"ok","version":"1.0.0"}
+```
 
 ---
 

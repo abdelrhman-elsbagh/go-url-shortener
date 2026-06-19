@@ -37,6 +37,15 @@ func doGet(t *testing.T, h http.Handler) int {
 	return w.Code
 }
 
+func doGetPath(t *testing.T, h http.Handler, path string) int {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	req.RemoteAddr = "127.0.0.1:1234"
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	return w.Code
+}
+
 func TestRedisRateLimiter_AllowsUnderLimit(t *testing.T) {
 	rl, _ := newRedisLimiter(t, 3)
 	h := rl.Middleware(okHandler())
@@ -95,4 +104,22 @@ func TestRedisRateLimiter_RetryAfterHeader(t *testing.T) {
 
 	assert.Equal(t, http.StatusTooManyRequests, w.Code)
 	assert.Equal(t, "1", w.Header().Get("Retry-After"))
+}
+
+func TestRateLimiter_BypassesSwaggerPath(t *testing.T) {
+	rl := middleware.NewRateLimiter(1, 1)
+	h := rl.Middleware(okHandler())
+
+	for i := 0; i < 10; i++ {
+		assert.Equal(t, http.StatusOK, doGetPath(t, h, "/swagger/doc.json"))
+	}
+}
+
+func TestRedisRateLimiter_BypassesSwaggerPath(t *testing.T) {
+	rl, _ := newRedisLimiter(t, 1)
+	h := rl.Middleware(okHandler())
+
+	for i := 0; i < 10; i++ {
+		assert.Equal(t, http.StatusOK, doGetPath(t, h, "/swagger/doc.json"))
+	}
 }

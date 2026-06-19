@@ -64,6 +64,7 @@ func newTestEnv(t *testing.T) *testEnv {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.AdaptLimiter(rl))
 	r.GET("/health", handler.HealthHandler("1.0.0"))
+	r.GET("/swagger/index.html", func(c *gin.Context) { c.Status(http.StatusOK) })
 	r.POST("/api/v1/encode", handler.NewEncodeHandler(svc, svc.FullShortURL, logger).Handle)
 	r.POST("/api/v1/decode", handler.NewDecodeHandler(svc, logger).Handle)
 
@@ -107,6 +108,15 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.Equal(t, "1; mode=block", resp.Header.Get("X-XSS-Protection"))
 	assert.Equal(t, "strict-origin-when-cross-origin", resp.Header.Get("Referrer-Policy"))
 	assert.Equal(t, "default-src 'none'", resp.Header.Get("Content-Security-Policy"))
+}
+
+func TestSecurityHeaders_SwaggerCSP(t *testing.T) {
+	env := newTestEnv(t)
+	resp, err := env.server.Client().Get(env.server.URL + "/swagger/index.html")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'", resp.Header.Get("Content-Security-Policy"))
 }
 
 func TestRequestID_Present(t *testing.T) {
